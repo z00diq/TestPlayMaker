@@ -1,5 +1,6 @@
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,14 +9,17 @@ public class FSMCreator : MonoBehaviour
 {
     [SerializeField] private Button _button;
     [SerializeField] private float _waitTime;
+    [SerializeField] private string _message;
+    PlayMakerFSM _playMaker;
 
-    private void Start()
+    private void Awake()
     {
-        PlayMakerFSM playMaker = _button.gameObject.AddComponent<PlayMakerFSM>();
-        playMaker.enabled = false;
-        var fsm = playMaker.Fsm;
+        _playMaker = _button.gameObject.AddComponent<PlayMakerFSM>();
+        _playMaker.enabled = false;
+        var fsm = _playMaker.Fsm;
+
         FsmState initState = new FsmState(fsm);
-        initState.Name = "idle";
+        initState.Name = "Idle";
 
         FsmState showMessageState = new FsmState(fsm);
         showMessageState.Name = "ShowMsg";
@@ -24,8 +28,6 @@ public class FSMCreator : MonoBehaviour
         waitState.Name = "Wait";
 
         FsmTransition fromIdleToWait = new FsmTransition();
-        FsmEvent uiEvent = new FsmEvent(FsmEvent.GetFsmEvent(FsmEvent.UiClick));
-        fromIdleToWait.FsmEvent = uiEvent;
         fromIdleToWait.ToFsmState = waitState;
         initState.Transitions = new FsmTransition[] { fromIdleToWait };
 
@@ -41,17 +43,23 @@ public class FSMCreator : MonoBehaviour
         WaitAction.finishEvent = fromWaitToShowMessage.FsmEvent;
         waitState.Actions = new FsmStateAction[] { WaitAction };
 
-        ShowDebugLogAction showDebugLogAction = new ShowDebugLogAction("hello world");
+        ShowDebugLogAction showDebugLogAction = new ShowDebugLogAction(_message);
         showMessageState.Actions = new FsmStateAction[] { showDebugLogAction };
         FsmTransition fromMsgToIdle = new FsmTransition();
-        fromMsgToIdle.FsmEvent = new FsmEvent(FsmEvent.GetFsmEvent(FsmEvent.Finished));
+        fromMsgToIdle.FsmEvent = FsmEvent.Finished;
         fromMsgToIdle.ToFsmState = initState;
         showMessageState.Transitions = new FsmTransition[] { fromMsgToIdle };
 
-
         fsm.States = new FsmState[] { initState, waitState, showMessageState };
         fsm.StartState = initState.Name;
-        playMaker.enabled = true;
+
+        fromIdleToWait.FsmEvent = FsmEvent.UiPointerClick;
+        _button.onClick.AddListener(()=>_playMaker.SendEvent(FsmEvent.UiPointerClick.Name));
+    }
+
+    private void Start()
+    {
+        _playMaker.enabled = true;
     }
 
     class ShowDebugLogAction : FsmStateAction
