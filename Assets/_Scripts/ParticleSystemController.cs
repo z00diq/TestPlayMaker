@@ -5,11 +5,13 @@ using UnityEngine;
 public class ParticleSystemController : MonoBehaviour
 {
     [SerializeField] private ParticleSystem _front;
-    [SerializeField] private ParticleSystem _frontSubParticles;
+    [SerializeField] private ParticleSystem _frontOtherSide;
+    [SerializeField] private ParticleSystem _frontTrials;
     [SerializeField] private ParticleSystem _back;
     [SerializeField] private Color _changingColor;
     [SerializeField] private Material _particlesMaterial;
     private Color _startColor;
+
 
     private int _currentSystem = 1;
     void Start()
@@ -28,8 +30,10 @@ public class ParticleSystemController : MonoBehaviour
         {
             var main = _front.main;
             main.loop = false;
-            var subMain = _frontSubParticles.main;
-            subMain.loop = false;
+            main = _frontTrials.main;
+            main.loop = false;
+            main = _frontOtherSide.main;
+            main.loop = false;
         }
 
         if (Input.GetKey(KeyCode.Space))
